@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include<stdio.h>
@@ -51,30 +52,38 @@ UART_HandleTypeDef huart1;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_ADC1_Init(void);
-static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
+static void vbat_reader_init(void);
+static void uart_transmitter_init(void);
+void config_peripherals(void);
+void start_peripherals(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void get_battery_voltage (void)
+void config_peripherals(void)
+{
+	vbat_reader_init();
+	uart_transmitter_init();
+}
+
+void start_peripherals(void)
+{
+	HAL_UART_Init(&huart1);
+	HAL_ADC_Start(&hadc1);
+}
+
+uint16_t get_battery_voltage ()
 {
 	// inicializa a conversão em PC14
 	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 
 	uint16_t valor_adc_retorno = HAL_ADC_GetValue(&hadc1);
+	uint16_t valor_divisor_tensao = ((3.13 * valor_adc_retorno) / 4095) * 100;
+	uint16_t tensao_bateria = ((5.0 * valor_divisor_tensao) / 313) * 100;
 
-	// retorna o valor da tensão em PC14, o valor varia entre 0 - 330 que é
-	// a tensão máxima
-	uint16_t tensao_bateria = ((3.33 * valor_adc_retorno) / 4095) * 100;
-	char DadoTX[20];
-
-	sprintf(DadoTX, "%d\r\n", tensao_bateria);
-
-	// transmite o valor da conversão para a UART
-	HAL_UART_Transmit(&huart1, (uint8_t *)DadoTX, strlen(DadoTX), HAL_MAX_DELAY);
+	return tensao_bateria;
 }
 
 /* USER CODE END 0 */
@@ -107,12 +116,10 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_ADC1_Init();
-  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Init(&huart1);
 
-  HAL_ADC_Start(&hadc1);
+  config_peripherals();
+  start_peripherals();
 
   /* USER CODE END 2 */
 
@@ -121,8 +128,14 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	get_battery_voltage();
+
     /* USER CODE BEGIN 3 */
+	uint16_t vbat = get_battery_voltage();
+
+	char DadoTX[20];
+	sprintf(DadoTX, "%d\r\n", vbat);
+
+	HAL_UART_Transmit(&huart1, (uint8_t *) DadoTX, strlen(DadoTX), HAL_MAX_DELAY);
   }
   /* USER CODE END 3 */
 }
@@ -169,57 +182,54 @@ void SystemClock_Config(void)
   }
 }
 
-/**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
+// inicialização do ADC (PA1)
+static void vbat_reader_init(void)
 {
 
-  /* USER CODE BEGIN ADC1_Init 0 */
+	/* USER CODE BEGIN ADC1_Init 0 */
 
-  /* USER CODE END ADC1_Init 0 */
+	/* USER CODE END ADC1_Init 0 */
 
-  ADC_ChannelConfTypeDef sConfig = {0};
+	ADC_ChannelConfTypeDef sConfig = {0};
 
-  /* USER CODE BEGIN ADC1_Init 1 */
+	/* USER CODE BEGIN ADC1_Init 1 */
 
-  /* USER CODE END ADC1_Init 1 */
-  /** Common config
-  */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = ENABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_1;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC1_Init 2 */
+	/* USER CODE END ADC1_Init 1 */
+	/** Common config
+	 */
+	hadc1.Instance = ADC1;
+	hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+	hadc1.Init.ContinuousConvMode = ENABLE;
+	hadc1.Init.DiscontinuousConvMode = DISABLE;
+	hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+	hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+	hadc1.Init.NbrOfConversion = 1;
+	if (HAL_ADC_Init(&hadc1) != HAL_OK)
+	{
+		Error_Handler();
+	}
+	/** Configure Regular Channel
+	 */
+	sConfig.Channel = ADC_CHANNEL_1;
+	sConfig.Rank = ADC_REGULAR_RANK_1;
+	sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+	if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+	{
+		Error_Handler();
+	}
+	/* USER CODE BEGIN ADC1_Init 2 */
 
-  /* USER CODE END ADC1_Init 2 */
-
+	/* USER CODE END ADC1_Init 2 */
 }
+
 
 /**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART1_UART_Init(void)
+// Inicialização da UART_TX (PA9)
+static void uart_transmitter_init(void)
 {
 
   /* USER CODE BEGIN USART1_Init 0 */

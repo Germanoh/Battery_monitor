@@ -61,8 +61,8 @@ all: main-build
 main-build: Tensao_Bateria.elf secondary-outputs
 
 # Tool invocations
-Tensao_Bateria.elf: $(OBJS) $(USER_OBJS) C:\Users\germa\Documents\STM32Toolchain\projects\Tensao_Bateria_STM32F103\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Tensao_Bateria.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\germa\Documents\STM32Toolchain\projects\Tensao_Bateria_STM32F103\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Tensao_Bateria.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Tensao_Bateria.elf: $(OBJS) $(USER_OBJS) C:\Users\germa\Documents\Estagio\Tensao_Bateria\Tensao_Bateria_STM32F103\STM32F103C8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Tensao_Bateria.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\germa\Documents\Estagio\Tensao_Bateria\Tensao_Bateria_STM32F103\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Tensao_Bateria.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

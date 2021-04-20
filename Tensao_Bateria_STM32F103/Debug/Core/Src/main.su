@@ -1,7 +1,9 @@
-main.c:62:6:get_battery_voltage	32	static
-main.c:86:5:main	8	static
-main.c:134:6:SystemClock_Config	88	static
-main.c:177:13:MX_ADC1_Init	24	static
-main.c:222:13:MX_USART1_UART_Init	8	static
-main.c:255:13:MX_GPIO_Init	16	static
-main.c:271:6:Error_Handler	4	static,ignoring_inline_asm
+main.c:65:6:config_peripherals	8	static
+main.c:71:6:start_peripherals	8	static
+main.c:77:10:get_battery_voltage	16	static
+main.c:95:5:main	32	static
+main.c:147:6:SystemClock_Config	88	static
+main.c:186:13:vbat_reader_init	24	static
+main.c:232:13:uart_transmitter_init	8	static
+main.c:265:13:MX_GPIO_Init	16	static
+main.c:281:6:Error_Handler	4	static,ignoring_inline_asm
