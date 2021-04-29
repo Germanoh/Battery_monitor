@@ -70,7 +70,7 @@ void config_peripherals(void)
 
 void start_peripherals(void)
 {
-	HAL_UART_Init(&huart1);
+	HAL_UART_Init(&huart3);
 	HAL_ADC_Start(&hadc1);
 }
 

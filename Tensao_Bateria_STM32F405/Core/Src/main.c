@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include<string.h>
 #include<stdio.h>
+#include "battery_monitor.h"
 
 /* USER CODE END Includes */
 
@@ -42,7 +43,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
 
 UART_HandleTypeDef huart3;
 
@@ -53,33 +53,13 @@ UART_HandleTypeDef huart3;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_ADC1_Init(void);
-static void MX_USART3_UART_Init(void);
+static void  MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
-void start_peripherals(void);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void start_peripherals(void)
-{
-	HAL_UART_Init(&huart3);
-	HAL_ADC_Start(&hadc1);
-}
-
-float get_battery_voltage (void)
-{
-	// inicializa a conversão em PC14
-	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-
-	uint16_t adc_return_value = HAL_ADC_GetValue(&hadc1);
-	float voltage_divider = ((3.3 * adc_return_value) / 4095);
-	float battery_voltage = ((5.25 * voltage_divider) / 330);
-
-	return battery_voltage;
-}
 
 /* USER CODE END 0 */
 
@@ -111,29 +91,34 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_ADC1_Init();
-  MX_USART3_UART_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  HAL_UART_Init(&huart3);
 
-  start_peripherals();
+  init_battery_monitor();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_UART_Transmit(&huart3, (uint8_t *) "Iniciando...\n", strlen("Iniciando...\n"), HAL_MAX_DELAY);
-  while (1)
+
+  char *welcome_message = "\x1b[2JIniciando Programa Vbat\r\n";
+
+  HAL_UART_Transmit(&huart3, (uint8_t *) welcome_message, strlen(welcome_message), HAL_MAX_DELAY);
+   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
 	float vbat = get_battery_voltage();
 
 	char data_tx[20];
-	//sprintf(DadoTX, "%d.%d\r\n", vbat / 100, vbat % 100);
 	sprintf(data_tx, "%.2f\r\n", vbat);
 
 	HAL_UART_Transmit(&huart3, (uint8_t *) data_tx, strlen(data_tx), HAL_MAX_DELAY);
+
+	HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -178,61 +163,11 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
-{
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
-  */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = DISABLE;
-  hadc1.Init.ContinuousConvMode = ENABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
-  */
-  sConfig.Channel = ADC_CHANNEL_14;
-  sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
-}
-
-/**
   * @brief USART3 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART3_UART_Init(void)
+static void  MX_USART1_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */
